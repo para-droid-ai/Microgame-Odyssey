@@ -19,6 +19,26 @@ export function CombatView() {
   const [activeMinigame, setActiveMinigame] = useState<{type: MinigameType, card: CardDef} | null>(null);
   const initialized = useRef(false);
 
+  const processDraw = (
+    count: number,
+    stateRefs: { hand: CardDef[], deck: CardDef[], discard: CardDef[], lostEnergy: number }
+  ) => {
+    for (let i = 0; i < count; i++) {
+       if (stateRefs.deck.length === 0) {
+         if (stateRefs.discard.length === 0) break; // Cannot draw
+         stateRefs.deck = [...stateRefs.discard].sort(() => Math.random() - 0.5);
+         stateRefs.discard = [];
+       }
+       const card = stateRefs.deck.shift()!;
+       if (card.name === 'Dissonance') {
+          stateRefs.lostEnergy += 1;
+          stateRefs.discard.push(card);
+       } else {
+          stateRefs.hand.push(card);
+       }
+    }
+  };
+
   // Initial draw & enemy setup
   useEffect(() => {
     if (activeRun && !initialized.current) {
@@ -26,10 +46,20 @@ export function CombatView() {
       // shuffle deck
       const shuffled = [...activeRun.deck].sort(() => Math.random() - 0.5);
       
+      let stateRefs = { 
+        hand: [] as CardDef[], 
+        deck: shuffled, 
+        discard: [] as CardDef[], 
+        lostEnergy: 0 
+      };
+      
+      processDraw(4, stateRefs);
+      
       // Calculate start energy
       const baseEnergy = 3; // hardcoded for now, could read from meta
       const mEnergy = activeRun.exhaustedNextCombat ? baseEnergy - 1 : baseEnergy;
       const bEnergy = activeRun.bonusEnergyNextCombat || 0;
+      const initialEnergy = Math.max(0, mEnergy + bEnergy - stateRefs.lostEnergy);
 
       updateRun({
          exhaustedNextCombat: false,
@@ -37,15 +67,15 @@ export function CombatView() {
          player: {
              ...activeRun.player,
              maxEnergy: mEnergy,
-             energy: mEnergy + bEnergy,
+             energy: initialEnergy,
              block: 0,
              freeCardsThisTurn: 0
          }
       });
       
-      // we shuffle above but wait until state persists
-      setHand(shuffled.slice(0, 4));
-      setDeck(shuffled.slice(4));
+      setHand(stateRefs.hand);
+      setDeck(stateRefs.deck);
+      setDiscard(stateRefs.discard);
       
       const newEnemy = getRandomEnemy(activeRun.floor);
       setEnemy(newEnemy);
@@ -97,25 +127,23 @@ export function CombatView() {
     });
 
     // Player draw
-    setDiscard(d => [...d, ...hand]);
-    let newDeck = [...deck];
-    let newHand = [];
-    if (newDeck.length < 4) {
-      // reshuffle
-      newDeck = [...newDeck, ...discard].sort(() => Math.random() - 0.5);
-      setDiscard([]);
-    }
-    newHand = newDeck.slice(0, 4);
-    setDeck(newDeck.slice(4));
-
-    // Handle Dissonance draw effects
-    const dissonanceCount = newHand.filter(c => c.name === 'Dissonance').length;
-    if (dissonanceCount > 0) {
-       playerUpdates.energy = Math.max(0, playerUpdates.energy - dissonanceCount);
-       updateRun({ player: playerUpdates }); // Apply energy loss
+    let stateRefs = { 
+      hand: [] as CardDef[], 
+      deck: [...deck], 
+      discard: [...discard, ...hand], 
+      lostEnergy: 0 
+    };
+    
+    processDraw(4, stateRefs);
+    
+    if (stateRefs.lostEnergy > 0) {
+       playerUpdates.energy = Math.max(0, playerUpdates.energy - stateRefs.lostEnergy);
+       updateRun({ player: playerUpdates }); // Apply energy loss incrementally
     }
     
-    setHand(newHand);
+    setHand(stateRefs.hand);
+    setDeck(stateRefs.deck);
+    setDiscard(stateRefs.discard);
   };
 
   const playCard = (card: CardDef, index: number) => {
@@ -193,20 +221,18 @@ export function CombatView() {
           newDeck.splice(Math.floor(Math.random() * newDeck.length), 0, curse);
         }
       } else if (card.minigame === 'timing') {
+         let drawCount = 0;
          if (result.tier === 'flawless') {
            multiplier = 1.5;
-           const draw = newDeck.splice(0, 3);
-           newHand = [...newHand, ...draw];
+           drawCount = 3;
            playerUpdates.freeCardsThisTurn = 99;
          } else if (result.tier === 'clean') {
            multiplier = 1.0;
-           const draw = newDeck.splice(0, 2);
-           newHand = [...newHand, ...draw];
+           drawCount = 2;
            playerUpdates.freeCardsThisTurn = 1;
          } else if (result.tier === 'partial') {
            multiplier = 0.8;
-           const draw = newDeck.splice(0, 1);
-           newHand = [...newHand, ...draw];
+           drawCount = 1;
          } else {
            multiplier = 0.0;
            const curse: CardDef = {
@@ -221,6 +247,22 @@ export function CombatView() {
              icon: 'X'
            };
            newDiscard.push(curse);
+         }
+         
+         if (drawCount > 0) {
+            let stateRefs = { 
+              hand: newHand, 
+              deck: newDeck, 
+              discard: newDiscard, 
+              lostEnergy: 0 
+            };
+            processDraw(drawCount, stateRefs);
+            newHand = stateRefs.hand;
+            newDeck = stateRefs.deck;
+            newDiscard = stateRefs.discard;
+            if (stateRefs.lostEnergy > 0) {
+               playerUpdates.energyLoss = (playerUpdates.energyLoss || 0) + stateRefs.lostEnergy;
+            }
          }
       } else if (card.minigame === 'speed') {
          if (result.tier === 'surge') {
@@ -259,17 +301,21 @@ export function CombatView() {
     setDiscard(newDiscard);
     
     // Apply updates functionally to not overwrite energy changes from playCard
-    updateRun(prev => ({
-      ...prev,
-      ...runUpdates,
-      player: {
-        ...prev.player,
-        ...playerUpdates,
-        block: (card.type === 'skill' || card.type === 'power') 
-           ? prev.player.block + finalValue 
-           : prev.player.block
-      }
-    }));
+    updateRun(prev => {
+      const { energyLoss, ...cleanPlayerUpdates } = playerUpdates;
+      return {
+        ...prev,
+        ...runUpdates,
+        player: {
+          ...prev.player,
+          ...cleanPlayerUpdates,
+          energy: Math.max(0, prev.player.energy - (energyLoss || 0)),
+          block: (card.type === 'skill' || card.type === 'power') 
+             ? prev.player.block + finalValue 
+             : prev.player.block
+        }
+      };
+    });
 
     if (card.type === 'attack') {
       setEnemy(e => {

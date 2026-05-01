@@ -1,14 +1,13 @@
 # Shared Coworking Ledger & State Serialization Engine
 
 ## Current Session Integrity
-**Last Formal Clock-Out Timestamp:** `2026-04-30`
-**System State Diagnosis:** Phase 4 completed. Fixed critical state race condition reported by Navigator.
+**Last Formal Clock-Out Timestamp:** `2026-05-01`
+**System State Diagnosis:** Phase 4 completed. Fixed critical deck disappearing bug during reshuffling.
 
 ## Tactical Handoff Summary
 * **Recent Accomplishments:** 
-  - Diagnosed and fixed the "infinite block tap" exploit the Navigator reported. Plain block cards (cards with `minigame: 'none'`) were bypassing discard and energy deduction because their synchronous state resolution was overwriting the React state from `playCard`.
-  - Refactored `updateRun` in `GameProvider` to accept functional updater callbacks `(prev => ...)` instead of just partial objects.
-  - Rewrote `resolveCard` to funnel all stat changes through a functional update, preserving intermediate energy/free-card-cost deductions executed by `playCard`.
-  - Plain block cards now correctly deduct energy, apply block, and move to the discard pile instead of resting in the hand indefinitely.
+  - Fixed a state overwrite bug in `CombatView.tsx` `endTurn` function that caused cards to go missing. When the draw pile ran low and a reshuffle was triggered, the `setDiscard([])` overwrite was clearing the `hand` cards appended to the discard pile asynchronously, inevitably whittling the deck down to 0 cards.
+  - Corrected `Dissonance` curse implementation in both `resolveCard` and `endTurn`. It now correctly subtracts energy through a functional React update rather than reading stale state parameters. Dissonance goes straight to discard pile rather than hovering uselessly in the player's hand.
+  - Plain block cards bug was addressed in a prior fix to securely deduct energy.
 
-* **Immediate Initialization Directive:** Verify full end-to-end loop and proceed with polish or audio SFX addition.
+* **Immediate Initialization Directive:** Monitor combat drawing behavior to ensure the deck does not lose state over extended battles.

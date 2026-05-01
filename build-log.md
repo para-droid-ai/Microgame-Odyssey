@@ -16,3 +16,9 @@ This document exhaustively tracks all executed modifications during Active Devel
 - **[Executed]** Created `src/components/minigames/MemoryGame.tsx`. A 4-node 'Simon Says' interface. Mounted to `MinigameOverlay.tsx`. Added `memoryBoost` card.
 - **[Executed]** Mutated `STARTING_DECK` in `cards.ts` to include Speed, Precision, and Memory templates, solving the "only 1 minigame" complaint entirely.
 
+## [2026-05-01] Session: Combat State Fixes
+
+### Phase 3: Logic & State Implementation
+- **[Diagnosed/Fixed]** Fixed "no cards dealt" empty-clip bug in CombatView. Deck array operations (`deck.splice()`) during minigame draw effects were quietly failing to return cards when the deck count was lower than the draw target list, permanently starving the hand. 
+- **[Executed]** Implemented a rigorous `processDraw` helper function in `CombatView.tsx` to handle standard sequence card draws, auto-merging and auto-shuffling the discard pile if the deck hits `0` mid-draw.
+- **[Diagnosed/Fixed]** Corrected `Dissonance` curse stacking edge-cases. It now safely passes a negative energy delta functionally through `updateRun` without colliding with the synchronous state modifications made by `playCard`.
