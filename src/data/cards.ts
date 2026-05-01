@@ -1,0 +1,78 @@
+import { CardDef } from '../types';
+
+export const CARD_DATABASE: Record<string, CardDef> = {
+  strike: {
+    id: 'strike',
+    name: 'Quick Strike',
+    type: 'attack',
+    cost: 1,
+    baseValue: 4,
+    minigame: 'timing',
+    description: (val, p) => p ? `Deal ${val} DMG based on timing.` : `Deal ${val} DMG.`,
+    rarity: 'common',
+    icon: 'Sword',
+  },
+  defend: {
+    id: 'defend',
+    name: 'Brace',
+    type: 'skill',
+    cost: 1,
+    baseValue: 5,
+    minigame: 'none',
+    description: (val) => `Gain ${val} Block.`,
+    rarity: 'common',
+    icon: 'Shield',
+  },
+  flurry: {
+    id: 'flurry',
+    name: 'Rapid Flurry',
+    type: 'attack',
+    cost: 2,
+    baseValue: 12,
+    minigame: 'speed',
+    description: (val, p) => p ? `Rapid tap for up to ${val} DMG.` : `Deal ${val} DMG.`,
+    rarity: 'uncommon',
+    icon: 'Swords',
+  },
+  snipe: {
+    id: 'snipe',
+    name: 'Precision Shot',
+    type: 'attack',
+    cost: 1,
+    baseValue: 15,
+    minigame: 'precision',
+    description: (val, p) => p ? `Aim carefully. Up to ${val} DMG.` : `Deal ${val} DMG.`,
+    rarity: 'rare',
+    icon: 'Target',
+  },
+  meditate: {
+    id: 'meditate',
+    name: 'Deep Focus',
+    type: 'skill',
+    cost: 0,
+    baseValue: 10,
+    minigame: 'timing',
+    description: (val, p) => p ? `Gain block based on timing.` : `Gain ${val} Block.`,
+    rarity: 'uncommon',
+    icon: 'Brain',
+  },
+  memoryBoost: {
+    id: 'memoryBoost',
+    name: 'Neural Link',
+    type: 'power',
+    cost: 1,
+    baseValue: 15,
+    minigame: 'memory',
+    description: (val, p) => p ? `Gain block based on memory pattern.` : `Gain up to ${val} Block.`,
+    rarity: 'rare',
+    icon: 'Brain',
+  }
+};
+
+export const STARTING_DECK = [
+  CARD_DATABASE['strike'],
+  CARD_DATABASE['flurry'],
+  CARD_DATABASE['snipe'],
+  CARD_DATABASE['memoryBoost'],
+  CARD_DATABASE['defend'],
+];

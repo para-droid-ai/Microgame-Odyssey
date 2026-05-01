@@ -1,0 +1,6 @@
+{
+  "name": "Microgame Odyssey",
+  "description": "A roguelike deckbuilder with WarioWare style skill-based microgames. Play cards to trigger fast-paced interaction.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
