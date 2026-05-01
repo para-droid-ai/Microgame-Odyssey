@@ -192,59 +192,36 @@ export function CombatView() {
           };
           newDeck.splice(Math.floor(Math.random() * newDeck.length), 0, curse);
         }
-      } else if (card.minigame === 'timing') {
-         if (result.tier === 'flawless') {
-           multiplier = 1.5;
-           const draw = newDeck.splice(0, 3);
-           newHand = [...newHand, ...draw];
-           playerUpdates.freeCardsThisTurn = 99;
-         } else if (result.tier === 'clean') {
-           multiplier = 1.0;
-           const draw = newDeck.splice(0, 2);
-           newHand = [...newHand, ...draw];
-           playerUpdates.freeCardsThisTurn = 1;
-         } else if (result.tier === 'partial') {
-           multiplier = 0.8;
-           const draw = newDeck.splice(0, 1);
-           newHand = [...newHand, ...draw];
-         } else {
-           multiplier = 0.0;
-           const curse: CardDef = {
-             id: `dissonance-${Date.now()}`,
-             name: 'Dissonance',
-             type: 'skill',
-             cost: 0,
-             baseValue: 0,
-             minigame: 'none',
-             description: () => 'Exhaust. When drawn, lose 1 Energy.',
-             rarity: 'common',
-             icon: 'X'
-           };
-           newDiscard.push(curse);
-         }
-      } else if (card.minigame === 'speed') {
-         if (result.tier === 'surge') {
-           multiplier = 1.5;
-           runUpdates.draftSizeModifier = 2;
-           runUpdates.gold = (activeRun.gold || 0) + 30;
-           runUpdates.bonusEnergyNextCombat = 1;
-         } else if (result.tier === 'strong') {
-           multiplier = 1.0;
-           runUpdates.draftSizeModifier = 1;
-           runUpdates.gold = (activeRun.gold || 0) + 15;
-         } else if (result.tier === 'adequate') {
-           multiplier = 0.8;
-           runUpdates.gold = (activeRun.gold || 0) + 10;
-         } else {
-           multiplier = 0.5;
-           runUpdates.gold = (activeRun.gold || 0) + 5;
-           runUpdates.exhaustedNextCombat = true;
-         }
+      } else if (card.minigame === 'timing' || card.minigame === 'blindTimer' || card.minigame === 'lockpick') {
+        const { tier } = score as { tier: string };
+        if (tier === 'flawless' || tier === 'perfect') mult = 1.5;
+        else if (tier === 'clean' || tier === 'good') mult = 1.0;
+        else if (tier === 'partial') mult = 0.5;
+        else mult = 0; // miss/fail
+      } else if (card.minigame === 'speed' || card.minigame === 'unscramble') {
+        const { tier } = score as { tier: string, score?: number };
+        if (tier === 'surge' || tier === 'perfect') mult = 1.5;
+        else if (tier === 'strong') mult = 1.0;
+        else if (tier === 'adequate') mult = 0.5;
+        else mult = 0.2; // tried
+      } else if (card.minigame === 'balance') {
+        const { tier } = score as { tier: string };
+        if (tier === 'perfect') mult = 1.5;
+        else if (tier === 'good') mult = 1.0;
+        else if (tier === 'partial') mult = 0.5;
+        else mult = 0;
+      } else if (card.minigame === 'wires') {
+        const { tier } = score as { tier: string };
+        if (tier === 'perfect') mult = 1.5;
+        else if (tier === 'partial') mult = 0.5;
+        else mult = 0;
       } else {
-        multiplier = result.tier === 'fail' ? 0.0 : 1.0;
+        // Fallback for memory and others that return a raw number
+        mult = typeof score === 'number' ? score : 1.0;
       }
+      multiplier = mult;
     } else {
-      multiplier = result === 1.0 ? 1.0 : 0.5 + (result * 1.0);
+      multiplier = typeof result === 'number' ? (result === 1.0 ? 1.0 : 0.5 + (result * 1.0)) : 1.0;
     }
 
     if (activeRun.player.focusedStrikeToken && card.type === 'attack') {

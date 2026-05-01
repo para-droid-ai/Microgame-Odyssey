@@ -16,3 +16,9 @@ This document exhaustively tracks all executed modifications during Active Devel
 - **[Executed]** Created `src/components/minigames/MemoryGame.tsx`. A 4-node 'Simon Says' interface. Mounted to `MinigameOverlay.tsx`. Added `memoryBoost` card.
 - **[Executed]** Mutated `STARTING_DECK` in `cards.ts` to include Speed, Precision, and Memory templates, solving the "only 1 minigame" complaint entirely.
 
+
+## 2026-04-30
+- Implemented 5 new party-game inspired Minigame components: BalanceGame, WireGame, BlindTimerGame, LockpickGame, UnscrambleGame.
+- Updated `types.ts` and `MinigameOverlay.tsx` to support the 5 new minigame types.
+- Updated `cards.ts` with 5 new cards utilizing these minigames (`equilibrium`, `splice`, `timeStop`, `pick`, `cipher`) and added them to `STARTING_DECK`.
+- Updated `CombatView.tsx` to parse the results from the new minigames.

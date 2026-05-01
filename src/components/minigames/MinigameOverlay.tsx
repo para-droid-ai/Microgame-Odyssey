@@ -4,6 +4,11 @@ import { TimingGame } from './TimingGame';
 import { SpeedGame } from './SpeedGame';
 import { PrecisionGame } from './PrecisionGame';
 import { MemoryGame } from './MemoryGame';
+import { BalanceGame } from './BalanceGame';
+import { WireGame } from './WireGame';
+import { BlindTimerGame } from './BlindTimerGame';
+import { LockpickGame } from './LockpickGame';
+import { UnscrambleGame } from './UnscrambleGame';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface MinigameOverlayProps {
@@ -32,6 +37,11 @@ export function MinigameOverlay({ type, onResult }: MinigameOverlayProps) {
           {type === 'speed' && <SpeedGame onComplete={onResult} />}
           {type === 'precision' && <PrecisionGame onComplete={onResult} />}
           {type === 'memory' && <MemoryGame onComplete={onResult} />}
+          {type === 'balance' && <BalanceGame onComplete={onResult} />}
+          {type === 'wires' && <WireGame onComplete={onResult} />}
+          {type === 'blindTimer' && <BlindTimerGame onComplete={onResult} />}
+          {type === 'lockpick' && <LockpickGame onComplete={onResult} />}
+          {type === 'unscramble' && <UnscrambleGame onComplete={onResult} />}
         </motion.div>
       </motion.div>
     </AnimatePresence>

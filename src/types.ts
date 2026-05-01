@@ -1,4 +1,4 @@
-export type MinigameType = 'timing' | 'speed' | 'precision' | 'memory' | 'none';
+export type MinigameType = 'timing' | 'speed' | 'precision' | 'memory' | 'balance' | 'wires' | 'blindTimer' | 'lockpick' | 'unscramble' | 'none';
 
 export type CardRarity = 'common' | 'uncommon' | 'rare';
 
